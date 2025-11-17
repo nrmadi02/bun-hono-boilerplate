@@ -4,10 +4,12 @@ import createApp from "./lib/create-app";
 import configureOpenAPI from "./lib/open-api";
 import auth from "./routes/auth/auth.index";
 import test from "./routes/test/test.index";
-import "dotenv/config";
+import "./config/env";
+import { prettyJSON } from "hono/pretty-json";
 
 const app = createApp();
 app.use(logger());
+app.use(prettyJSON());
 app.use("/api/*", cors());
 
 configureOpenAPI(app);

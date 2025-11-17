@@ -1,6 +1,7 @@
 import type { OpenAPIHono } from "@hono/zod-openapi";
 import { Scalar } from "@scalar/hono-api-reference";
 import { createErrorSchema } from "../schemas/base.schema";
+import type { AuthVariables } from "./create-app";
 
 export const openAPIObjectConfig = {
 	openapi: "3.1.0",
@@ -35,7 +36,7 @@ export const errorResponseOpenAPIObjectConfig = (description: string) => {
 	};
 };
 
-export default function configureOpenAPI(app: OpenAPIHono) {
+export default function configureOpenAPI(app: OpenAPIHono<AuthVariables>) {
 	app.doc31("/doc", openAPIObjectConfig);
 	app.get(
 		"/ui",

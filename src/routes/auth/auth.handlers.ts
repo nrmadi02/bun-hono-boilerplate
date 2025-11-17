@@ -2,7 +2,7 @@ import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { sign } from "hono/jwt";
 import prisma from "prisma";
-import type { Prisma } from "prisma/generated/client";
+import type { Prisma, User } from "prisma/generated/client";
 import { Provider } from "prisma/generated/enums";
 import type { AppRouteHandler } from "../../lib/types";
 import { toUserResponseSchema } from "../../schemas/user/user-response.schema";
@@ -20,6 +20,7 @@ import { getConnInfo } from 'hono/bun'
 import { verify } from "hono/jwt";
 import { env } from "../../config/env";
 import { catchError, errorResponse, successResponse } from "../../utils/response";
+import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-verification-email-async";
 
 const getDeviceInfo = (c: Context) => {
 	const userAgent = c.req.header("user-agent") || "Unknown";
@@ -69,6 +70,36 @@ const manageUserSessions = async (userId: string, maxSessions: number = 5) => {
 	}
 }
 
+const createPayloadToken = (user: User) => {
+	const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2); // 2 days
+	const refreshExpires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
+	const payload = {
+		id: user.id,
+		email: user.email,
+		role: user.role,
+		expires: expires.toISOString(),
+	};
+
+	return {
+		expires,
+		refreshExpires,
+		payload,
+	}
+}
+
+const createSession = async (token: string, expires: Date, userId: string, deviceName: string, ipAddress: string, userAgent: string) => {
+	await prisma.session.create({
+		data: {
+			sessionToken: token,
+			expireAt: expires,
+			userId,
+			deviceName,
+			ipAddress,
+			userAgent,
+		},
+	});
+}
+
 export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 	try {
 		const { email, password } = c.req.valid("json");
@@ -104,14 +135,7 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 			return errorResponse(c, 'Invalid password', ['Invalid password'], 400);
 		}
 
-		const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2); // 2 days
-		const refreshExpires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
-		const payload = {
-			id: user.id,
-			email: user.email,
-			role: user.role,
-			expires: expires.toISOString(),
-		};
+		const { expires, refreshExpires, payload } = createPayloadToken(user);
 
 		const token = await sign(payload, secret, "HS256");
 		const refreshToken = await sign(
@@ -121,18 +145,10 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 		);
 
 		await manageUserSessions(user.id, 5);
+		
 		const { deviceName, ipAddress, userAgent } = getDeviceInfo(c);
 
-		await prisma.session.create({
-			data: {
-				sessionToken: token,
-				expireAt: expires,
-				userId: user.id,
-				deviceName,
-				ipAddress,
-				userAgent,
-			},
-		});
+		await createSession(token, expires, user.id, deviceName, ipAddress, userAgent);
 
 		return successResponse(c, 'Login successful', {
 			token,
@@ -188,14 +204,7 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 			},
 		});
 
-		const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2); // 2 days
-		const refreshExpires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 30); // 30 days
-		const payload = {
-			id: user.id,
-			email: user.email,
-			role: user.role,
-			expires: expires.toISOString(),
-		};
+		const { expires, refreshExpires, payload } = createPayloadToken(user);
 
 		const token = await sign(payload, secret, "HS256");
 		const refreshToken = await sign(
@@ -208,16 +217,9 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 
 		const { deviceName, ipAddress, userAgent } = getDeviceInfo(c);
 
-		await prisma.session.create({
-			data: {
-				sessionToken: token,
-				expireAt: expires,
-				userId: user.id,
-				deviceName,
-				ipAddress,
-				userAgent,
-			},
-		});
+		await createSession(token, expires, user.id, deviceName, ipAddress, userAgent);
+
+		await sendVerificationEmailAsync([user.email]);
 
 		return successResponse(c, 'Register successful', {
 			token,

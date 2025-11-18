@@ -1,9 +1,8 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "jsx": "react-jsx",
-    "jsxImportSource": "react",
-    "target": "ESNext",
+	"compilerOptions": {
+		"strict": true,
+		"jsx": "react-jsx",
+		"target": "ESNext",
 		"module": "ESNext",
 		"moduleResolution": "bundler",
 		"verbatimModuleSyntax": true,
@@ -14,5 +13,6 @@
 		},
 		"outDir": "./dist",
 		"types": ["bun", "bun-types"],
-  }
+	},
+	"exclude": ["./node_modules"],
 }

@@ -7,13 +7,14 @@
 	},
 	"files": {
 		"ignoreUnknown": false,
-		"include": [
+		"includes": [
 			"**",
 			"!**/dist",
 			"!**/dev-dist",
 			"!**/.vscode",
 			"!**/prisma/generated"
-		]
+		],
+		"ignore": ["**/src/views/styles/global.css"]
 	},
 	"formatter": {
 		"enabled": true,

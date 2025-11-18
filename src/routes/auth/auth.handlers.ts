@@ -1,11 +1,20 @@
 import type { Context } from "hono";
+import { getConnInfo } from "hono/bun";
 import { HTTPException } from "hono/http-exception";
-import { sign } from "hono/jwt";
+import { sign, verify } from "hono/jwt";
 import prisma from "prisma";
 import type { Prisma, User } from "prisma/generated/client";
 import { Provider } from "prisma/generated/enums";
+import { UAParser } from "ua-parser-js";
+import { env } from "../../config/env";
 import type { AppRouteHandler } from "../../lib/types";
 import { toUserResponseSchema } from "../../schemas/user/user-response.schema";
+import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-verification-email-async";
+import {
+	catchError,
+	errorResponse,
+	successResponse,
+} from "../../utils/response";
 import type {
 	ForgotPasswordRoutes,
 	GetMeRoutes,
@@ -15,12 +24,6 @@ import type {
 	RegisterRoutes,
 	ResetPasswordRoutes,
 } from "./auth.routes";
-import { UAParser } from "ua-parser-js";
-import { getConnInfo } from 'hono/bun'
-import { verify } from "hono/jwt";
-import { env } from "../../config/env";
-import { catchError, errorResponse, successResponse } from "../../utils/response";
-import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-verification-email-async";
 
 const getDeviceInfo = (c: Context) => {
 	const userAgent = c.req.header("user-agent") || "Unknown";
@@ -29,9 +32,12 @@ const getDeviceInfo = (c: Context) => {
 	const parser = new UAParser(userAgent);
 	const result = parser.getResult();
 
-	return { deviceName: result.os.name ?? "Unknown", ipAddress: ipAddress.remote.address ?? "Unknown", userAgent };
-}
-
+	return {
+		deviceName: result.os.name ?? "Unknown",
+		ipAddress: ipAddress.remote.address ?? "Unknown",
+		userAgent,
+	};
+};
 
 const manageUserSessions = async (userId: string, maxSessions: number = 5) => {
 	await prisma.session.deleteMany({
@@ -68,7 +74,7 @@ const manageUserSessions = async (userId: string, maxSessions: number = 5) => {
 			},
 		});
 	}
-}
+};
 
 const createPayloadToken = (user: User) => {
 	const expires = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2); // 2 days
@@ -84,10 +90,17 @@ const createPayloadToken = (user: User) => {
 		expires,
 		refreshExpires,
 		payload,
-	}
-}
+	};
+};
 
-const createSession = async (token: string, expires: Date, userId: string, deviceName: string, ipAddress: string, userAgent: string) => {
+const createSession = async (
+	token: string,
+	expires: Date,
+	userId: string,
+	deviceName: string,
+	ipAddress: string,
+	userAgent: string,
+) => {
 	await prisma.session.create({
 		data: {
 			sessionToken: token,
@@ -98,7 +111,7 @@ const createSession = async (token: string, expires: Date, userId: string, devic
 			userAgent,
 		},
 	});
-}
+};
 
 export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 	try {
@@ -123,7 +136,7 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 		});
 
 		if (!user) {
-			return errorResponse(c, 'User not found', ['User not found'], 404);
+			return errorResponse(c, "User not found", ["User not found"], 404);
 		}
 
 		const isPasswordValid = await Bun.password.verify(
@@ -132,7 +145,7 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 		);
 
 		if (!isPasswordValid) {
-			return errorResponse(c, 'Invalid password', ['Invalid password'], 400);
+			return errorResponse(c, "Invalid password", ["Invalid password"], 400);
 		}
 
 		const { expires, refreshExpires, payload } = createPayloadToken(user);
@@ -145,12 +158,19 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 		);
 
 		await manageUserSessions(user.id, 5);
-		
+
 		const { deviceName, ipAddress, userAgent } = getDeviceInfo(c);
 
-		await createSession(token, expires, user.id, deviceName, ipAddress, userAgent);
+		await createSession(
+			token,
+			expires,
+			user.id,
+			deviceName,
+			ipAddress,
+			userAgent,
+		);
 
-		return successResponse(c, 'Login successful', {
+		return successResponse(c, "Login successful", {
 			token,
 			refreshToken,
 			user: toUserResponseSchema(user),
@@ -175,7 +195,12 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 		});
 
 		if (existingUser) {
-			return errorResponse(c, 'User already exists', ['User already exists'], 400);
+			return errorResponse(
+				c,
+				"User already exists",
+				["User already exists"],
+				400,
+			);
 		}
 
 		const hashedPassword = await Bun.password.hash(password);
@@ -217,15 +242,27 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 
 		const { deviceName, ipAddress, userAgent } = getDeviceInfo(c);
 
-		await createSession(token, expires, user.id, deviceName, ipAddress, userAgent);
-
-		await sendVerificationEmailAsync([user.email]);
-
-		return successResponse(c, 'Register successful', {
+		await createSession(
 			token,
-			refreshToken,
-			user: toUserResponseSchema(user),
-		}, 200);
+			expires,
+			user.id,
+			deviceName,
+			ipAddress,
+			userAgent,
+		);
+
+		await sendVerificationEmailAsync([user.email], token);
+
+		return successResponse(
+			c,
+			"Register successful",
+			{
+				token,
+				refreshToken,
+				user: toUserResponseSchema(user),
+			},
+			200,
+		);
 	} catch (error) {
 		return catchError(error);
 	}
@@ -243,7 +280,12 @@ export const logoutHandler: AppRouteHandler<LogoutRoutes> = async (c) => {
 			});
 
 			if (!session) {
-				return errorResponse(c, 'User is not logged in', ['User is not logged in'], 401);
+				return errorResponse(
+					c,
+					"User is not logged in",
+					["User is not logged in"],
+					401,
+				);
 			}
 
 			await prisma.session.delete({
@@ -252,8 +294,8 @@ export const logoutHandler: AppRouteHandler<LogoutRoutes> = async (c) => {
 				},
 			});
 
-			return successResponse(c, 'Logged out from device successfully', {
-				message: 'Logged out from device successfully',
+			return successResponse(c, "Logged out from device successfully", {
+				message: "Logged out from device successfully",
 			});
 		}
 
@@ -271,8 +313,8 @@ export const logoutHandler: AppRouteHandler<LogoutRoutes> = async (c) => {
 			});
 		}
 
-		return successResponse(c, 'Logged out successfully', {
-			message: 'Logged out successfully',
+		return successResponse(c, "Logged out successfully", {
+			message: "Logged out successfully",
 		});
 	} catch (error) {
 		return catchError(error);
@@ -316,7 +358,7 @@ export const getSessionsHandler: AppRouteHandler<GetSessionsRoutes> = async (
 			isCurrent: session.sessionToken === token,
 		}));
 
-		return successResponse(c, 'Sessions retrieved successfully', {
+		return successResponse(c, "Sessions retrieved successfully", {
 			sessions: sessionsData,
 		});
 	} catch (error) {
@@ -332,18 +374,20 @@ export const getMeHandler: AppRouteHandler<GetMeRoutes> = async (c) => {
 		});
 
 		if (!user) {
-				return errorResponse(c, 'User not found', ['User not found'], 404);
+			return errorResponse(c, "User not found", ["User not found"], 404);
 		}
 
-		return successResponse(c, 'User retrieved successfully', {
+		return successResponse(c, "User retrieved successfully", {
 			user: toUserResponseSchema(user),
 		});
 	} catch (error) {
 		return catchError(error);
 	}
-}
+};
 
-export const forgotPasswordHandler: AppRouteHandler<ForgotPasswordRoutes> = async (c) => {
+export const forgotPasswordHandler: AppRouteHandler<
+	ForgotPasswordRoutes
+> = async (c) => {
 	try {
 		const { email } = c.req.valid("json");
 
@@ -352,7 +396,7 @@ export const forgotPasswordHandler: AppRouteHandler<ForgotPasswordRoutes> = asyn
 		});
 
 		if (!user) {
-			return errorResponse(c, 'User not found', ['User not found'], 404);
+			return errorResponse(c, "User not found", ["User not found"], 404);
 		}
 
 		const secret = env.JWT_SECRET;
@@ -368,28 +412,37 @@ export const forgotPasswordHandler: AppRouteHandler<ForgotPasswordRoutes> = asyn
 
 		// TODO: Send email to user with reset password token
 
-		return successResponse(c, 'Forgot password successful', {
-			message: 'Forgot password successful',
+		return successResponse(c, "Forgot password successful", {
+			message: "Forgot password successful",
 		});
 	} catch (error) {
 		return catchError(error);
 	}
 };
 
-export const resetPasswordHandler: AppRouteHandler<ResetPasswordRoutes> = async (c) => {
+export const resetPasswordHandler: AppRouteHandler<
+	ResetPasswordRoutes
+> = async (c) => {
 	try {
 		const { token, password, confirmPassword } = c.req.valid("json");
 
 		if (password !== confirmPassword) {
-			return errorResponse(c, 'Passwords do not match', ['Passwords do not match'], 400);
+			return errorResponse(
+				c,
+				"Passwords do not match",
+				["Passwords do not match"],
+				400,
+			);
 		}
 
 		const secret = env.JWT_SECRET;
 		const isVerifiedToken = await verify(token, secret, "HS256");
-		const expireAt = new Date(isVerifiedToken.exp as number * 1000);
+		const expireAt = new Date((isVerifiedToken.exp as number) * 1000);
 
-		if (!isVerifiedToken) throw new HTTPException(400, { message: "Invalid token" });
-		if (expireAt < new Date()) throw new HTTPException(400, { message: "Token expired" });
+		if (!isVerifiedToken)
+			throw new HTTPException(400, { message: "Invalid token" });
+		if (expireAt < new Date())
+			throw new HTTPException(400, { message: "Token expired" });
 
 		const hashedPassword = await Bun.password.hash(password);
 
@@ -397,7 +450,8 @@ export const resetPasswordHandler: AppRouteHandler<ResetPasswordRoutes> = async 
 			where: { userId: isVerifiedToken.id as string },
 		});
 
-		if (!account) throw new HTTPException(400, { message: "Account not found" });
+		if (!account)
+			throw new HTTPException(400, { message: "Account not found" });
 
 		await prisma.account.update({
 			where: { id: account.id },
@@ -408,8 +462,8 @@ export const resetPasswordHandler: AppRouteHandler<ResetPasswordRoutes> = async 
 			where: { userId: isVerifiedToken.id as string },
 		});
 
-		return successResponse(c, 'Reset password successful', {
-			message: 'Reset password successful',
+		return successResponse(c, "Reset password successful", {
+			message: "Reset password successful",
 		});
 	} catch (error) {
 		return catchError(error);

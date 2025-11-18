@@ -3,7 +3,7 @@ import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-verif
 import type { TestRoute } from "./test.routes";
 
 export const test: AppRouteHandler<TestRoute> = async (c) => {
-	await sendVerificationEmailAsync(['nrmadi02@gmail.com']);
+	await sendVerificationEmailAsync(["nrmadi02@gmail.com"], "1234567890");
 	return c.json({
 		message: "Hello World",
 		success: true,

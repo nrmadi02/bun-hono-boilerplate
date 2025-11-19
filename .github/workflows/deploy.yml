@@ -44,7 +44,7 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }}
+            ghcr.io/nrmadi02/hono-bun:${{ steps.vars.outputs.TAG }}
 
   deploy:
     needs: build-and-push
@@ -72,13 +72,10 @@ jobs:
           script: |
             cd /root/project
 
-            # login GHCR untuk podman
-            # kalau image kamu private, pakai PAT; kalau public, bagian ini bisa di-skip
-            echo "${{ secrets.GHCR_PAT }}" | podman login ghcr.io -u ${{ github.actor }} --password-stdin || true
-
-            IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.TAG }}"
-
-            podman pull $IMAGE
-
-            # pastikan docker-compose.*.yml sudah pakai image yang sama
-            podman-compose -f ${{ steps.vars.outputs.COMPOSE_FILE }} up -d
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            IMAGE=ghcr.io/nrmadi02/hono-bun:${{ steps.vars.outputs.TAG }}
+            
+            docker pull "$IMAGE"
+            
+            docker compose -f ${{ steps.vars.outputs.COMPOSE_FILE }} up -d

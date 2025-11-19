@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   api:
-    image: ghcr.io/nrmadi02/hono-bun:master
+    image: ghcr.io/nrmadi02/hono-bun:production
     container_name: hono-bun-production
     env_file:
       - .env.production

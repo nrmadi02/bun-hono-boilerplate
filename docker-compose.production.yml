@@ -7,6 +7,9 @@ services:
     env_file:
       - .env.production
     restart: unless-stopped
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
     ports:
       - "5002:5002"
     depends_on:

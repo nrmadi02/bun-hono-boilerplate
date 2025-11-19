@@ -70,7 +70,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           port: 22
           script: |
-            cd /project
+            cd /root/project
 
             # login GHCR untuk podman
             # kalau image kamu private, pakai PAT; kalau public, bagian ini bisa di-skip

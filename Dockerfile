@@ -2,6 +2,9 @@
 
 FROM oven/bun:1.2.17 AS base
 WORKDIR /app
+RUN apt-get update -y \
+  && apt-get install -y openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY package.json bun.lock* ./
 RUN bun install
@@ -18,6 +21,9 @@ RUN bun run build
 
 FROM oven/bun:1.2.17 AS runtime
 WORKDIR /app
+RUN apt-get update -y \
+  && apt-get install -y openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 ENV NODE_ENV=production
 ENV PORT=3000

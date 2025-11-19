@@ -78,4 +78,4 @@ jobs:
             
             docker pull "$IMAGE"
             
-            docker-compose -f ${{ steps.vars.outputs.COMPOSE_FILE }} up -d
+            docker compose -f ${{ steps.vars.outputs.COMPOSE_FILE }} up -d

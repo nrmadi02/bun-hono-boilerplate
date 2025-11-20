@@ -1,12 +1,10 @@
 import type { AppRouteHandler } from "../../lib/types";
-import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-verification-email-async";
 import type { TestRoute } from "./test.routes";
 
-export const test: AppRouteHandler<TestRoute> = async (c) => {
-	await sendVerificationEmailAsync(["nrmadi02@gmail.com"], "1234567890");
+export const test: AppRouteHandler<TestRoute> = async (c) => {	
 	return c.json({
-		message: "Hello World",
+		message: "Hello World, TEST UPDATED",
 		success: true,
-		data: "Hello World",
+		data: "Hello World, TEST UPDATED",
 	});
 };

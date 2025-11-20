@@ -1,4 +1,4 @@
-name: CI/CD Bun Hono
+name: CI Bun Hono
 
 on:
   push:
@@ -45,37 +45,3 @@ jobs:
           push: true
           tags: |
             ghcr.io/nrmadi02/hono-bun:${{ steps.vars.outputs.TAG }}
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Set ENV by branch
-        id: vars
-        run: |
-          if [ "${GITHUB_REF##*/}" = "master" ]; then
-            echo "TAG=production" >> $GITHUB_OUTPUT
-            echo "COMPOSE_FILE=docker-compose.production.yml" >> $GITHUB_OUTPUT
-          else
-            echo "TAG=staging" >> $GITHUB_OUTPUT
-            echo "COMPOSE_FILE=docker-compose.staging.yml" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Deploy via SSH (password)
-        uses: appleboy/ssh-action@v1.2.0
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          port: 22
-          script: |
-            cd /root/project
-
-            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-            
-            IMAGE=ghcr.io/nrmadi02/hono-bun:${{ steps.vars.outputs.TAG }}
-            
-            docker pull "$IMAGE"
-            
-            docker compose -f ${{ steps.vars.outputs.COMPOSE_FILE }} up -d

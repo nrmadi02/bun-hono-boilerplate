@@ -16,7 +16,9 @@ pipeline {
 
     stage('Deploy staging') {
       when {
-        branch 'staging'
+        expression {
+          return (env.BRANCH_NAME == 'staging') || (env.GIT_BRANCH?.contains('staging'))
+        }
       }
       steps {
         withCredentials([
@@ -40,7 +42,9 @@ pipeline {
 
     stage('Deploy production') {
       when {
-        branch 'master'  
+        expression {
+        return (env.BRANCH_NAME == 'master') || (env.GIT_BRANCH?.contains('master'))
+      }
       }
       steps {
         withCredentials([

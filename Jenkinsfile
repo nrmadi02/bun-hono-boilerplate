@@ -27,11 +27,17 @@ pipeline {
 
     stage('Verify Image Available') {
       steps {
-        sh '''
-          echo "Verifying image ${IMAGE_BASE}:${IMAGE_TAG_PARAM} is available..."
-          docker pull ${IMAGE_BASE}:${IMAGE_TAG_PARAM} || exit 1
-          echo "Image verified successfully!"
-        '''
+        withCredentials([
+          sshUserPrivateKey(credentialsId: 'ssh-ubuntu-key', keyFileVariable: 'SSH_KEYFILE', usernameVariable: 'SSH_USER'),
+          string(credentialsId: 'ghcr-pat', variable: 'GHCR_PAT'),
+          string(credentialsId: 'server-host', variable: 'SERVER_HOST')
+        ]) {
+          sh '''
+            set -e
+            chmod 600 "$SSH_KEYFILE"
+            printf "%s" "$GHCR_PAT" | ssh -o StrictHostKeyChecking=no -i "$SSH_KEYFILE" "$SSH_USER"@"$SERVER_HOST" "set -e; docker login ghcr.io -u ${GITHUB_USER} --password-stdin || true; docker pull ${IMAGE_BASE}:${IMAGE_TAG_PARAM}"
+          '''
+        }
       }
     }
 

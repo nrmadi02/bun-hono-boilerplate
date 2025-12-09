@@ -1,0 +1,28 @@
+# Admin permissions - full access
+p, admin, *, *
+
+# User permissions
+p, user, users, read
+p, user, profile, read
+p, user, profile, update
+p, user, sessions, read
+p, user, sessions, delete
+
+# Moderator permissions
+p, moderator, users, read
+p, moderator, users, update
+p, moderator, cache, read
+
+# Admin-only permissions (cache management, policies)
+p, admin, cache, clear
+p, admin, policies, create
+p, admin, policies, delete
+p, admin, policies, read
+p, admin, policies, reload
+p, admin, roles, assign
+p, admin, roles, remove
+p, admin, roles, read
+
+# Role assignments (optional - examples)
+# g, user_id_here, admin
+# g, user_id_here, moderator

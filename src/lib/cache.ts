@@ -54,7 +54,6 @@ class MemoryCache implements ICache {
 
   clear(): void {
     this.cache.clear();
-    console.log("🗑️  In-memory cache cleared");
   }
 
   stats(): { size: number; keys: string[] } {
@@ -66,17 +65,11 @@ class MemoryCache implements ICache {
 
   cleanup(): void {
     const now = Date.now();
-    let cleaned = 0;
 
     for (const [key, item] of this.cache.entries()) {
       if (now > item.expiresAt) {
         this.cache.delete(key);
-        cleaned++;
       }
-    }
-
-    if (cleaned > 0) {
-      console.log(`🧹 Cleaned ${cleaned} expired in-memory cache items`);
     }
   }
 }
@@ -86,18 +79,14 @@ function getCacheImplementation(): ICache {
   
   if (useRedis) {
     try {
-      // Try to import and use Redis cache
-      console.log("✅ Using Redis cache (production mode)");
       return redisCache;
     } catch (error) {
-      console.error("❌ Failed to initialize Redis cache:", error);
-      console.warn("⚠️  Falling back to in-memory cache");
+      console.error("Failed to initialize Redis cache, falling back to in-memory", error);
       const memCache = new MemoryCache();
       setupMemoryCacheCleanup(memCache);
       return memCache;
     }
   } else {
-    console.log("💾 Using in-memory cache (development mode)");
     const memCache = new MemoryCache();
     setupMemoryCacheCleanup(memCache);
     return memCache;

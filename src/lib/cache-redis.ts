@@ -12,22 +12,11 @@ const redis = new Redis({
   lazyConnect: true,
 });
 
+
 redis.connect().catch((err) => {
-  console.error("❌ Redis connection failed:", err.message);
-  console.warn("⚠️  Falling back to in-memory cache");
+  console.error("Redis connection failed:", err.message);
 });
 
-redis.on("connect", () => {
-  console.log("✅ Redis connected");
-});
-
-redis.on("error", (err) => {
-  console.error("❌ Redis error:", err.message);
-});
-
-redis.on("close", () => {
-  console.warn("⚠️  Redis connection closed");
-});
 
 class RedisCache {
   private redis: Redis;
@@ -48,6 +37,7 @@ class RedisCache {
       return JSON.parse(data) as T;
     } catch (error) {
       console.error(`Cache get error for key ${key}:`, error);
+      // Silent fail for cache misses - return null
       return null;
     }
   }
@@ -58,6 +48,7 @@ class RedisCache {
       await this.redis.setex(this.prefix + key, ttlSeconds, data);
     } catch (error) {
       console.error(`Cache set error for key ${key}:`, error);
+      // Silent fail for cache writes - non-critical
     }
   }
 
@@ -66,6 +57,7 @@ class RedisCache {
       await this.redis.del(this.prefix + key);
     } catch (error) {
       console.error(`Cache delete error for key ${key}:`, error);
+      // Silent fail for cache deletes - non-critical
     }
   }
 
@@ -77,6 +69,7 @@ class RedisCache {
       }
     } catch (error) {
       console.error(`Cache deletePattern error for pattern ${pattern}:`, error);
+      // Silent fail for pattern deletes - non-critical
     }
   }
 
@@ -85,9 +78,9 @@ class RedisCache {
       const keys = await this.redis.keys(this.prefix + "*");
       if (keys.length > 0) {
         await this.redis.del(...keys);
-        console.log(`🗑️  Cache cleared: ${keys.length} keys deleted`);
       }
     } catch (error) {
+      // Log only clear errors as they're admin operations
       console.error("Cache clear error:", error);
     }
   }
@@ -105,6 +98,7 @@ class RedisCache {
         memory,
       };
     } catch (error) {
+      // Return defaults on error - non-critical
       console.error("Cache stats error:", error);
       return { size: 0, keys: [], memory: "unknown" };
     }
@@ -115,7 +109,8 @@ class RedisCache {
       const result = await this.redis.exists(this.prefix + key);
       return result === 1;
     } catch (error) {
-      console.error(`Cache exists error for key ${key}:`, error);
+      // Return false on error - non-critical
+      console.error("Cache exists error:", error);
       return false;
     }
   }
@@ -124,7 +119,8 @@ class RedisCache {
     try {
       return await this.redis.ttl(this.prefix + key);
     } catch (error) {
-      console.error(`Cache ttl error for key ${key}:`, error);
+      // Return -1 on error (key doesn't exist)
+      console.error("Cache ttl error:", error);
       return -1;
     }
   }
@@ -133,7 +129,8 @@ class RedisCache {
     try {
       return await this.redis.incrby(this.prefix + key, amount);
     } catch (error) {
-      console.error(`Cache increment error for key ${key}:`, error);
+      // Return 0 on error - non-critical
+      console.error("Cache increment error:", error);
       return 0;
     }
   }
@@ -150,7 +147,8 @@ class RedisCache {
       );
       return result === "OK";
     } catch (error) {
-      console.error(`Cache setIfNotExists error for key ${key}:`, error);
+      // Return false on error - operation failed
+      console.error("Cache setIfNotExists error:", error);
       return false;
     }
   }

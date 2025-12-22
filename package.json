@@ -37,6 +37,7 @@
 		"dotenv": "^17.2.3",
 		"hono": "^4.10.5",
 		"hono-openapi": "^1.1.1",
+		"hono-rate-limiter": "^0.5.1",
 		"ioredis": "^5.8.2",
 		"react": "^19.2.0",
 		"resend": "^6.4.2",

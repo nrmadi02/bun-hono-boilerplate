@@ -4,9 +4,6 @@ import type { AppRouteHandler } from "../../lib/types";
 import type { HealthRoute, LivenessRoute, MetricsRoute, ReadinessRoute } from "./health.routes";
 import { successResponse, errorResponse } from "../../utils/response";
 
-/**
- * Basic health check - returns 200 if server is running
- */
 export const healthHandler: AppRouteHandler<HealthRoute> = async (c) => {
 	return successResponse(
 		c,
@@ -20,15 +17,10 @@ export const healthHandler: AppRouteHandler<HealthRoute> = async (c) => {
 	);
 };
 
-/**
- * Readiness check - checks if app is ready to serve traffic
- * Checks: Database, Redis, Queue
- */
 export const readinessHandler: AppRouteHandler<ReadinessRoute> = async (c) => {
 	const checks: Record<string, { status: string; latency?: number; error?: string }> = {};
 	let overallStatus = "ready";
 
-	// 1. Check Database
 	try {
 		const dbStart = Date.now();
 		await prisma.$queryRaw`SELECT 1`;
@@ -45,7 +37,6 @@ export const readinessHandler: AppRouteHandler<ReadinessRoute> = async (c) => {
 		overallStatus = "not_ready";
 	}
 
-	// 2. Check Redis
 	try {
 		const redisStart = Date.now();
 		await connection.ping();
@@ -62,10 +53,8 @@ export const readinessHandler: AppRouteHandler<ReadinessRoute> = async (c) => {
 		overallStatus = "not_ready";
 	}
 
-	// 3. Check Queue (BullMQ)
 	try {
 		const queueStart = Date.now();
-		// Simple check if queue connection is active
 		const queueStatus = connection.status;
 		const queueLatency = Date.now() - queueStart;
 		
@@ -112,17 +101,12 @@ export const readinessHandler: AppRouteHandler<ReadinessRoute> = async (c) => {
 	);
 };
 
-/**
- * Liveness check - checks if app is alive (not deadlocked)
- * Simple check, no external dependencies
- */
 export const livenessHandler: AppRouteHandler<LivenessRoute> = async (c) => {
 	// Check if event loop is responsive
 	const start = Date.now();
 	await new Promise((resolve) => setImmediate(resolve));
 	const eventLoopLatency = Date.now() - start;
 
-	// If event loop is blocked for more than 1 second, consider unhealthy
 	if (eventLoopLatency > 1000) {
 		return errorResponse(
 			c,
@@ -150,11 +134,7 @@ export const livenessHandler: AppRouteHandler<LivenessRoute> = async (c) => {
 	);
 };
 
-/**
- * Detailed system metrics
- */
 export const metricsHandler: AppRouteHandler<MetricsRoute> = async (c) => {
-	// Get database pool stats (if available)
 	let dbStats = {};
 	try {
 		// @ts-ignore - accessing internal metrics
@@ -163,10 +143,8 @@ export const metricsHandler: AppRouteHandler<MetricsRoute> = async (c) => {
 			connections: metrics?.counters?.find((m: any) => m.key === "prisma_client_queries_total")?.value || 0,
 		};
 	} catch {
-		// Metrics not available
 	}
 
-	// Get Redis info
 	let redisStats = {};
 	try {
 		const info = await connection.info();
@@ -179,7 +157,8 @@ export const metricsHandler: AppRouteHandler<MetricsRoute> = async (c) => {
 			usedMemory: usedMemory?.trim() || "unknown",
 		};
 	} catch {
-		// Redis info not available
+		// Metrics not available
+		console.error("Redis metrics not available");
 	}
 
 	return successResponse(

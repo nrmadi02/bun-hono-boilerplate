@@ -10,9 +10,6 @@ import {
 
 
 
-/**
- * GET /health - Basic health check
- */
 export const healthRoute = createRoute({
 	method: "get",
 	path: "/health",
@@ -31,9 +28,6 @@ export const healthRoute = createRoute({
 	},
 });
 
-/**
- * GET /health/ready - Readiness check
- */
 export const readinessRoute = createRoute({
 	method: "get",
 	path: "/health/ready",
@@ -60,9 +54,6 @@ export const readinessRoute = createRoute({
 	},
 });
 
-/**
- * GET /health/live - Liveness check
- */
 export const livenessRoute = createRoute({
 	method: "get",
 	path: "/health/live",
@@ -89,9 +80,6 @@ export const livenessRoute = createRoute({
 	},
 });
 
-/**
- * GET /health/metrics - System metrics
- */
 export const metricsRoute = createRoute({
 	method: "get",
 	path: "/health/metrics",

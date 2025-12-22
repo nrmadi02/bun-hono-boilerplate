@@ -7,4 +7,7 @@ dist/
 .env
 .env.staging
 .env.production
+.env.test
+.env.test.local
 .vscode
+

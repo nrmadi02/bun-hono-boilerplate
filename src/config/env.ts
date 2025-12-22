@@ -11,6 +11,7 @@ const envSchema = z.object({
 	REDIS_PORT: z.string().min(1, "REDIS_PORT is required"),
 	RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
 	BASE_URL: z.string().min(1, "BASE_URL is required"),
+	USE_REDIS_CACHE: z.string().optional().default("false").transform((val) => val === "true"),
 });
 
 const parsed = envSchema.safeParse(process.env);

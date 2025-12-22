@@ -52,8 +52,6 @@ export const updateUserRoleHandler: AppRouteHandler<UpdateUserRoleRoute> = async
 
     await reloadPolicy();
     
-    console.log(`✅ User ${user.email} role updated: ${user.role} → ${role} (cache cleared)`);
-    
     return successResponse(c, "User role updated successfully", {
       updated: true,
       userId,

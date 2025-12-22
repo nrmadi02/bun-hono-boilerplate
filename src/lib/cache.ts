@@ -1,19 +1,24 @@
-/**
- * Simple in-memory cache with TTL
- * For production, consider using Redis
- */
+
+import { env } from "../config/env";
+import { redisCache } from "./cache-redis";
+
+export interface ICache {
+  get<T>(key: string): Promise<T | null> | T | null;
+  set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> | void;
+  delete(key: string): Promise<void> | void;
+  deletePattern(pattern: string): Promise<void> | void;
+  clear(): Promise<void> | void;
+  stats(): Promise<{ size: number; keys: string[] }> | { size: number; keys: string[] };
+}
 
 interface CacheItem<T> {
   value: T;
   expiresAt: number;
 }
 
-class MemoryCache {
+class MemoryCache implements ICache {
   private cache: Map<string, CacheItem<any>> = new Map();
 
-  /**
-   * Get value from cache
-   */
   get<T>(key: string): T | null {
     const item = this.cache.get(key);
     
@@ -21,7 +26,6 @@ class MemoryCache {
       return null;
     }
 
-    // Check if expired
     if (Date.now() > item.expiresAt) {
       this.cache.delete(key);
       return null;
@@ -30,24 +34,15 @@ class MemoryCache {
     return item.value as T;
   }
 
-  /**
-   * Set value in cache with TTL (in seconds)
-   */
   set<T>(key: string, value: T, ttlSeconds: number = 300): void {
     const expiresAt = Date.now() + (ttlSeconds * 1000);
     this.cache.set(key, { value, expiresAt });
   }
 
-  /**
-   * Delete specific key from cache
-   */
   delete(key: string): void {
     this.cache.delete(key);
   }
 
-  /**
-   * Delete all keys matching pattern
-   */
   deletePattern(pattern: string): void {
     const regex = new RegExp(pattern);
     for (const key of this.cache.keys()) {
@@ -57,17 +52,11 @@ class MemoryCache {
     }
   }
 
-  /**
-   * Clear all cache
-   */
   clear(): void {
     this.cache.clear();
-    console.log("🗑️  Cache cleared");
+    console.log("🗑️  In-memory cache cleared");
   }
 
-  /**
-   * Get cache stats
-   */
   stats(): { size: number; keys: string[] } {
     return {
       size: this.cache.size,
@@ -75,9 +64,6 @@ class MemoryCache {
     };
   }
 
-  /**
-   * Clean up expired items
-   */
   cleanup(): void {
     const now = Date.now();
     let cleaned = 0;
@@ -90,23 +76,46 @@ class MemoryCache {
     }
 
     if (cleaned > 0) {
-      console.log(`🧹 Cleaned ${cleaned} expired cache items`);
+      console.log(`🧹 Cleaned ${cleaned} expired in-memory cache items`);
     }
   }
 }
 
-// Singleton instance
-export const cache = new MemoryCache();
+function getCacheImplementation(): ICache {
+  const useRedis = env.USE_REDIS_CACHE || env.NODE_ENV === "production";
+  
+  if (useRedis) {
+    try {
+      // Try to import and use Redis cache
+      console.log("✅ Using Redis cache (production mode)");
+      return redisCache;
+    } catch (error) {
+      console.error("❌ Failed to initialize Redis cache:", error);
+      console.warn("⚠️  Falling back to in-memory cache");
+      const memCache = new MemoryCache();
+      setupMemoryCacheCleanup(memCache);
+      return memCache;
+    }
+  } else {
+    console.log("💾 Using in-memory cache (development mode)");
+    const memCache = new MemoryCache();
+    setupMemoryCacheCleanup(memCache);
+    return memCache;
+  }
+}
 
-// Auto cleanup every 5 minutes
-setInterval(() => {
-  cache.cleanup();
-}, 5 * 60 * 1000);
+function setupMemoryCacheCleanup(memCache: MemoryCache): void {
+  setInterval(() => {
+    memCache.cleanup();
+  }, 5 * 60 * 1000);
+}
 
-// Cache key generators
+export const cache = getCacheImplementation();
+
 export const CacheKeys = {
   user: (userId: string) => `user:${userId}`,
   userRoles: (userId: string) => `user:${userId}:roles`,
   allUsers: () => "users:all",
+  session: (sessionId: string) => `session:${sessionId}`,
 };
 

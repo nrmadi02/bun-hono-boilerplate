@@ -10,13 +10,13 @@ import {
   getUsersForRole,
 } from "../../../lib/casbin";
 import { catchError, errorResponse, successResponse } from "../../../utils/response";
-import { authService } from "../../../services/auth";
+import { userService } from "../../../services/users";
 
 export const assignRoleHandler: AppRouteHandler<AssignRoleRoute> = async (c) => {
   try {
     const { userId, role } = await c.req.json();
     
-    const user = await authService.findUserById(userId);
+    const user = await userService.findUserById(userId);
     if (!user) {
       return errorResponse(c, "User not found", ["User not found"], 404);
     }

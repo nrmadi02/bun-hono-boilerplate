@@ -10,6 +10,7 @@ export type AuthVariables = {
   Variables: {
     userId?: string
     token?: string
+    refreshToken?: string
   }
 }
 

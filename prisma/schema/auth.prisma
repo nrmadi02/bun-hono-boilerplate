@@ -38,7 +38,9 @@ model Account {
 model Session {
   id           String   @id @default(uuid())
   sessionToken String   @unique
+  refreshToken String?  @unique
   expireAt     DateTime
+  refreshTokenExpiresAt DateTime?
 
   deviceName String?
   ipAddress  String?
@@ -52,6 +54,7 @@ model Session {
 
   @@index([userId])
   @@index([expireAt])
+  @@index([refreshTokenExpiresAt])
 }
 
 model PasswordReset {

@@ -34,7 +34,7 @@ COPY --from=base /app/dist ./dist
 COPY --from=base /app/static ./static
 COPY --from=base /app/prisma/generated ./prisma/generated
 COPY --from=base /app/prisma/index.ts ./prisma/index.ts
-COPY --from=base /app/permission ./permission
+COPY --from=base /app/src/permission ./src/permission
 COPY package.json bun.lock* ./
 
 CMD ["bun", "dist/index.mjs"]

@@ -14,7 +14,8 @@ export const casbinMiddleware = (object: string, action: string) => createMiddle
 	c: Context,
   next: Next
 ) => {
-	const userId = c.var.userId;
+	try {
+		const userId = c.var.userId;
 	if (!userId) {
 		return errorResponse(c, "Unauthorized", ["Unauthorized"], 401);
 	}
@@ -40,5 +41,7 @@ export const casbinMiddleware = (object: string, action: string) => createMiddle
   }
 
   await next();
-
+	} catch  {
+		return errorResponse(c, "Internal server error", ["Authorization failed"], 500);
+	}
 });

@@ -95,7 +95,7 @@ export const verifyToken = async (
 };
 
 export const findToken = async (token: string) => {
-	return await prisma.session.findUnique({
+	return prisma.session.findUnique({
 		where: { sessionToken: token },
 		include: {
 			user: true
@@ -104,7 +104,7 @@ export const findToken = async (token: string) => {
 }
 
 export const findRefreshToken = async (token: string) => {
-	return await prisma.session.findUnique({
+	return prisma.session.findUnique({
 		where: { refreshToken: token },
 		include: {
 			user: true

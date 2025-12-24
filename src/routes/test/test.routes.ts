@@ -2,11 +2,10 @@ import { createRoute } from "@hono/zod-openapi";
 import { z } from "zod";
 import {
 	baseResponseSchema,
-	createErrorSchema,
-	createMessageObjectSchema,
 } from "../../schemas/base.schema";
 import { validateToken } from "../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../middlewares/casbin.middleware";
+import { errorResponseOpenAPIObjectConfig } from "../../lib/open-api";
 
 export const test = createRoute({
 	path: "/test",
@@ -25,22 +24,9 @@ export const test = createRoute({
 				},
 			},
 		},
-		404: {
-			content: {
-				"application/json": {
-					schema: createMessageObjectSchema(),
-				},
-			},
-			description: "User not found",
-		},
-		422: {
-			content: {
-				"application/json": {
-					schema: createErrorSchema(),
-				},
-			},
-			description: "The validation error(s)",
-		},
+		404: errorResponseOpenAPIObjectConfig('User not found'),
+		422: errorResponseOpenAPIObjectConfig("The validation error(s)"),
+		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
 	middleware: [validateToken, casbinMiddleware("users", "update")],
 });

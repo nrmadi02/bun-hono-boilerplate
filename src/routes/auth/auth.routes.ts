@@ -263,7 +263,7 @@ export const resendEmailVerificationRoutes = createRoute({
 		422: errorResponseOpenAPIObjectConfig("The validation error(s)"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
-	middleware: [authLimiter],
+	middleware: [validateToken,authLimiter],
 });
 
 export const verifyEmailRoutes = createRoute({

@@ -11,6 +11,9 @@ router.openapi(routes.refreshTokenRoutes, handlers.refreshTokenHandler);
 router.openapi(routes.forgotPasswordRoutes, handlers.forgotPasswordHandler);
 router.openapi(routes.resetPasswordRoutes, handlers.resetPasswordHandler);
 
+router.openapi(routes.resendEmailVerificationRoutes, handlers.resendEmailVerificationHandler);
+router.openapi(routes.verifyEmailRoutes, handlers.verifyEmailHandler);
+
 router.openapi(routes.logoutRoutes, handlers.logoutHandler);
 router.openapi(routes.getSessionsRoutes, handlers.getSessionsHandler);
 router.openapi(routes.getMeRoutes, handlers.getMeHandler);

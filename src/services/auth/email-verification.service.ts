@@ -29,6 +29,16 @@ export const createEmailVerification = async (userId: string, token: string, exp
 	});
 };
 
+export const invalidateAllUserEmailVerifications = async (userId: string) => {
+	await prisma.emailVerification.updateMany({
+		where: { 
+			userId,
+			isUsed: false,
+		},
+		data: { isUsed: true },
+	});
+};
+
 export const resendEmailVerification = async (email: string) => {
 	const user = await findUserByEmail(email);
 
@@ -49,6 +59,8 @@ export const resendEmailVerification = async (email: string) => {
 		}
 	}
 
+	await invalidateAllUserEmailVerifications(user.id);
+
 	const newToken = await generateEmailVerificationToken(user);
 	const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2);
 	
@@ -58,7 +70,23 @@ export const resendEmailVerification = async (email: string) => {
 	return { success: true, token: newToken };
 };
 
+export const findEmailVerificationByToken = async (token: string) => {
+	return prisma.emailVerification.findUnique({
+		where: { token },
+	});
+};
+
 export const verifyEmail = async (token: string) => {
+	const emailVerification = await findEmailVerificationByToken(token);
+
+	if (!emailVerification) {
+		return { error: "INVALID_TOKEN" };
+	}
+
+	if (emailVerification.isUsed) {
+		return { error: "TOKEN_ALREADY_USED" };
+	}
+
 	let verifiedToken;
 	try {
 		verifiedToken = await verifyToken(token);
@@ -82,6 +110,11 @@ export const verifyEmail = async (token: string) => {
 	if (user.emailVerified) {
 		return { error: "EMAIL_ALREADY_VERIFIED" };
 	}
+
+	await prisma.emailVerification.update({
+		where: { token },
+		data: { isUsed: true },
+	});
 
 	await prisma.user.update({
 		where: { id: user.id },

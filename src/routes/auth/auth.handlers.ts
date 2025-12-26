@@ -325,6 +325,13 @@ export const verifyEmailHandler: AppRouteHandler<VerifyEmailRoutes> = async (
 			switch (result.error) {
 				case "INVALID_TOKEN":
 					return errorResponse(c, "Invalid token", ["Invalid token"], 400);
+				case "TOKEN_ALREADY_USED":
+					return errorResponse(
+						c,
+						"Token already used or invalidated",
+						["Token already used or invalidated"],
+						400,
+					);
 				case "TOKEN_EXPIRED":
 					return errorResponse(c, "Token expired", ["Token expired"], 400);
 				case "USER_NOT_FOUND":

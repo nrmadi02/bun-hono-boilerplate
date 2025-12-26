@@ -13,11 +13,14 @@ import type {
 	LogoutRoutes,
 	RefreshTokenRoutes,
 	RegisterRoutes,
+	ResendEmailVerificationRoutes,
 	ResetPasswordRoutes,
+	VerifyEmailRoutes,
 } from "./auth.routes";
 import * as authService from "../../services/auth/auth.service";
 import * as sessionService from "../../services/auth/session.service";
 import * as passwordResetService from "../../services/auth/password-reset.service";
+import * as emailVerificationService from "../../services/auth/email-verification.service";
 import * as deviceService from "../../services/auth/device.service";
 import { sendResetPasswordEmailAsync } from "../../tasks/email/clients/send-email-async";
 
@@ -261,6 +264,91 @@ export const resetPasswordHandler: AppRouteHandler<
 		}
 
 		return successResponse(c, "Reset password successful", true);
+	} catch (error) {
+		return catchError(error);
+	}
+};
+
+export const resendEmailVerificationHandler: AppRouteHandler<
+	ResendEmailVerificationRoutes
+> = async (c) => {
+	try {
+		const { email } = c.req.valid("json");
+
+		const result = await emailVerificationService.resendEmailVerification(email);
+
+		if (result.error) {
+			switch (result.error) {
+				case "USER_NOT_FOUND":
+					return errorResponse(c, "User not found", ["User not found"], 404);
+				case "EMAIL_ALREADY_VERIFIED":
+					return errorResponse(
+						c,
+						"Email already verified",
+						["Email already verified"],
+						400,
+					);
+				case "WAIT_5_MINUTES":
+					return errorResponse(
+						c,
+						"You must wait 5 minutes before requesting a new verification email",
+						["You must wait 5 minutes before requesting a new verification email"],
+						400,
+					);
+				default:
+					return errorResponse(
+						c,
+						"Error resending email verification",
+						["Error resending email verification"],
+						400,
+					);
+			}
+		}
+
+		return successResponse(c, "Email verification sent successfully", {
+			token: result.token,
+		});
+	} catch (error) {
+		return catchError(error);
+	}
+};
+
+export const verifyEmailHandler: AppRouteHandler<VerifyEmailRoutes> = async (
+	c,
+) => {
+	try {
+		const { token } = c.req.valid("json");
+
+		const result = await emailVerificationService.verifyEmail(token);
+
+		if (result.error) {
+			switch (result.error) {
+				case "INVALID_TOKEN":
+					return errorResponse(c, "Invalid token", ["Invalid token"], 400);
+				case "TOKEN_EXPIRED":
+					return errorResponse(c, "Token expired", ["Token expired"], 400);
+				case "USER_NOT_FOUND":
+					return errorResponse(c, "User not found", ["User not found"], 404);
+				case "EMAIL_ALREADY_VERIFIED":
+					return errorResponse(
+						c,
+						"Email already verified",
+						["Email already verified"],
+						400,
+					);
+				default:
+					return errorResponse(
+						c,
+						"Error verifying email",
+						["Error verifying email"],
+						400,
+					);
+			}
+		}
+
+		return successResponse(c, "Email verified successfully", {
+			user: toUserResponseSchema(result.user!),
+		});
 	} catch (error) {
 		return catchError(error);
 	}

@@ -4,7 +4,9 @@ import {
 	forgotPasswordSchema,
 	loginSchema,
 	registerSchema,
+	resendEmailVerificationSchema,
 	resetPasswordSchema,
+	verifyEmailSchema,
 } from "../../schemas/auth/auth.schema";
 import {
 	forgotPasswordResponseSchema,
@@ -13,8 +15,10 @@ import {
 	logoutResponseSchema,
 	refreshTokenResponseSchema,
 	registerResponseSchema,
+	resendEmailVerificationResponseSchema,
 	resetPasswordResponseSchema,
 	sessionsResponseSchema,
+	verifyEmailResponseSchema,
 } from "../../schemas/auth/auth-response.schema";
 import { baseResponseSchema } from "../../schemas/base.schema";
 import { validateRefreshToken, validateToken } from "../../middlewares/auth.middleware";
@@ -231,6 +235,68 @@ export const resetPasswordRoutes = createRoute({
 	middleware: [passwordResetLimiter],
 });
 
+export const resendEmailVerificationRoutes = createRoute({
+	path: "/auth/resend-verification",
+	method: "post",
+	tags: ["Auth"],
+	description: "Resend email verification",
+	request: {
+		body: {
+			content: {
+				"application/json": {
+					schema: resendEmailVerificationSchema,
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			description: "Email verification sent successfully",
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(resendEmailVerificationResponseSchema),
+				},
+			},
+		},
+		400: errorResponseOpenAPIObjectConfig("Error resending email verification"),
+		404: errorResponseOpenAPIObjectConfig("User not found"),
+		422: errorResponseOpenAPIObjectConfig("The validation error(s)"),
+		500: errorResponseOpenAPIObjectConfig("Internal server error"),
+	},
+	middleware: [authLimiter],
+});
+
+export const verifyEmailRoutes = createRoute({
+	path: "/auth/verify-email",
+	method: "post",
+	tags: ["Auth"],
+	description: "Verify email address",
+	request: {
+		body: {
+			content: {
+				"application/json": {
+					schema: verifyEmailSchema,
+				},
+			},
+		},
+	},
+	responses: {
+		200: {
+			description: "Email verified successfully",
+			content: {
+				"application/json": {
+					schema: baseResponseSchema(verifyEmailResponseSchema),
+				},
+			},
+		},
+		400: errorResponseOpenAPIObjectConfig("Error verifying email"),
+		404: errorResponseOpenAPIObjectConfig("User not found"),
+		422: errorResponseOpenAPIObjectConfig("The validation error(s)"),
+		500: errorResponseOpenAPIObjectConfig("Internal server error"),
+	},
+	middleware: [authLimiter],
+});
+
 export type LoginRoutes = typeof loginRoutes;
 export type RegisterRoutes = typeof registerRoutes;
 export type LogoutRoutes = typeof logoutRoutes;
@@ -239,3 +305,5 @@ export type GetMeRoutes = typeof getMeRoutes;
 export type ForgotPasswordRoutes = typeof forgotPasswordRoutes;
 export type ResetPasswordRoutes = typeof resetPasswordRoutes;
 export type RefreshTokenRoutes = typeof refreshTokenRoutes;
+export type ResendEmailVerificationRoutes = typeof resendEmailVerificationRoutes;
+export type VerifyEmailRoutes = typeof verifyEmailRoutes;

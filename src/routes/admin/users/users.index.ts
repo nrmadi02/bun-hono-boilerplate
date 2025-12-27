@@ -6,5 +6,6 @@ const users = createRouter();
 
 users.openapi(routes.getUserRolesRoute, handlers.getUserRolesHandler);
 users.openapi(routes.updateUserRoleRoute, handlers.updateUserRoleHandler);
+users.openapi(routes.getListUserRoute, handlers.getListUserHandler);
 
 export default users;

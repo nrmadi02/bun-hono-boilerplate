@@ -3,7 +3,11 @@ import { z } from "zod";
 import { errorResponseOpenAPIObjectConfig } from "../../../lib/open-api";
 import { validateToken } from "../../../middlewares/auth.middleware";
 import { casbinMiddleware } from "../../../middlewares/casbin.middleware";
-import { baseResponseSchema } from "../../../schemas/base.schema";
+import {
+	basePaginationResponseSchema,
+	baseResponseSchema,
+} from "../../../schemas/base.schema";
+import { userResponseSchema } from "../../../schemas/user/user-response.schema";
 
 export const getUserRolesRoute = createRoute({
 	path: "/admin/users/{userId}/roles",
@@ -28,6 +32,34 @@ export const getUserRolesRoute = createRoute({
 		401: errorResponseOpenAPIObjectConfig("Unauthorized"),
 		403: errorResponseOpenAPIObjectConfig("Forbidden"),
 		404: errorResponseOpenAPIObjectConfig("User not found"),
+		500: errorResponseOpenAPIObjectConfig("Internal server error"),
+	},
+	middleware: [validateToken, casbinMiddleware("users", "read")],
+});
+
+export const getListUserRoute = createRoute({
+	path: "/admin/users",
+	method: "get",
+	tags: ["Admin - Users"],
+	description: "Get list of users",
+	security: [{ Bearer: [] }],
+	request: {
+		query: z.object({
+			limit: z.number(),
+			page: z.number(),
+		}),
+	},
+	responses: {
+		200: {
+			description: "User list retrieved successfully",
+			content: {
+				"application/json": {
+					schema: basePaginationResponseSchema(userResponseSchema),
+				},
+			},
+		},
+		401: errorResponseOpenAPIObjectConfig("Unauthorized"),
+		403: errorResponseOpenAPIObjectConfig("Forbidden"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
 	middleware: [validateToken, casbinMiddleware("users", "read")],
@@ -80,3 +112,4 @@ export const updateUserRoleRoute = createRoute({
 
 export type GetUserRolesRoute = typeof getUserRolesRoute;
 export type UpdateUserRoleRoute = typeof updateUserRoleRoute;
+export type GetListUserRoute = typeof getListUserRoute;

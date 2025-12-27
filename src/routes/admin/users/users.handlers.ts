@@ -7,7 +7,11 @@ import {
 	errorResponse,
 	successResponse,
 } from "../../../utils/response";
-import type { GetUserRolesRoute, UpdateUserRoleRoute } from "./users.routes";
+import type {
+	GetListUserRoute,
+	GetUserRolesRoute,
+	UpdateUserRoleRoute,
+} from "./users.routes";
 
 export const getUserRolesHandler: AppRouteHandler<GetUserRolesRoute> = async (
 	c,
@@ -55,6 +59,23 @@ export const updateUserRoleHandler: AppRouteHandler<
 			userId,
 			newRole: role,
 			cacheCleared: true,
+		});
+	} catch (error) {
+		return catchError(error);
+	}
+};
+
+export const getListUserHandler: AppRouteHandler<GetListUserRoute> = async (
+	c,
+) => {
+	try {
+		const query = c.req.query();
+		const limit = parseFloat(query.limit);
+		const page = parseFloat(query.page);
+		const [users, meta] = await userService.getListUser({ limit, page });
+		return successResponse(c, "User list retrieved successfully", {
+			list: users,
+			meta,
 		});
 	} catch (error) {
 		return catchError(error);

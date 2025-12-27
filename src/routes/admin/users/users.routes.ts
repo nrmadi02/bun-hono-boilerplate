@@ -45,8 +45,8 @@ export const getListUserRoute = createRoute({
 	security: [{ Bearer: [] }],
 	request: {
 		query: z.object({
-			limit: z.number(),
-			page: z.number(),
+			limit: z.string(),
+			page: z.string(),
 		}),
 	},
 	responses: {

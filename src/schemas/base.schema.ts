@@ -21,15 +21,22 @@ export const baseResponseSchema = (data: ZodSchema) => {
 	});
 };
 
-export const basePaginationResponseSchema = () => {
+export const basePaginationResponseSchema = (data: ZodSchema) => {
 	return z.object({
-		currentPage: z.number(),
-		isFirstPage: z.boolean(),
-		isLastPage: z.boolean(),
-		previousPage: z.number().nullable(),
-		nextPage: z.number().nullable(),
-		pageCount: z.number(),
-		totalCount: z.number(),
+		message: z.string(),
+		success: z.boolean(),
+		data: z.object({
+			list: data,
+			meta: z.object({
+				currentPage: z.number(),
+				isFirstPage: z.boolean(),
+				isLastPage: z.boolean(),
+				previousPage: z.number().nullable(),
+				nextPage: z.number().nullable(),
+				pageCount: z.number(),
+				totalCount: z.number(),
+			}),
+		}),
 	});
 };
 

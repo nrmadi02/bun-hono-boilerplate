@@ -32,4 +32,3 @@ export function createJsonHeaders(additionalHeaders?: Record<string, string>) {
 		...additionalHeaders,
 	};
 }
-

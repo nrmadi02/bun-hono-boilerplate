@@ -26,7 +26,7 @@ export const createWorkerManager = ({
 	let workerInitPromise: Promise<Worker> | null = null;
 
 	const setupWorker = async () => {
-		const worker = new Worker(queueName, processor, { 
+		const worker = new Worker(queueName, processor, {
 			connection,
 			concurrency,
 			limiter,

@@ -1,28 +1,34 @@
+import { serveStatic } from "hono/bun";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { serveStatic } from "hono/bun";
 import createApp from "./lib/create-app";
 import configureOpenAPI from "./lib/open-api";
+import admin from "./routes/admin/admin.index";
 import auth from "./routes/auth/auth.index";
 import authPage from "./routes/auth/auth.page";
-import test from "./routes/test/test.index";
-import admin from "./routes/admin/admin.index";
 import health from "./routes/health/health.index";
+import test from "./routes/test/test.index";
 import "./config/env";
 import { prettyJSON } from "hono/pretty-json";
+import { secureHeaders } from "hono/secure-headers";
 import { setupBullBoard } from "./lib/bull-board";
-import { secureHeaders } from 'hono/secure-headers'
 
 const app = createApp();
 app.use(logger());
 app.use(prettyJSON());
-app.use(secureHeaders())
+app.use(secureHeaders());
 
 app.use("/api/*", cors());
 
-app.use("/static/*", serveStatic({ root: "./", onFound: (path, c) => {
-	c.header("Cache-Control", "public, max-age=31536000, immutable");
-} }));
+app.use(
+	"/static/*",
+	serveStatic({
+		root: "./",
+		onFound: (_path, c) => {
+			c.header("Cache-Control", "public, max-age=31536000, immutable");
+		},
+	}),
+);
 
 configureOpenAPI(app);
 setupBullBoard(app);

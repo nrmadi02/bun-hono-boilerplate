@@ -1,5 +1,11 @@
 import type { AppRouteHandler } from "../../lib/types";
 import { toUserResponseSchema } from "../../schemas/user/user-response.schema";
+import * as authService from "../../services/auth/auth.service";
+import * as deviceService from "../../services/auth/device.service";
+import * as emailVerificationService from "../../services/auth/email-verification.service";
+import * as passwordResetService from "../../services/auth/password-reset.service";
+import * as sessionService from "../../services/auth/session.service";
+import { sendResetPasswordEmailAsync } from "../../tasks/email/clients/send-email-async";
 import {
 	catchError,
 	errorResponse,
@@ -17,12 +23,6 @@ import type {
 	ResetPasswordRoutes,
 	VerifyEmailRoutes,
 } from "./auth.routes";
-import * as authService from "../../services/auth/auth.service";
-import * as sessionService from "../../services/auth/session.service";
-import * as passwordResetService from "../../services/auth/password-reset.service";
-import * as emailVerificationService from "../../services/auth/email-verification.service";
-import * as deviceService from "../../services/auth/device.service";
-import { sendResetPasswordEmailAsync } from "../../tasks/email/clients/send-email-async";
 
 export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 	try {
@@ -31,14 +31,26 @@ export const loginHandler: AppRouteHandler<LoginRoutes> = async (c) => {
 		const result = await authService.loginUser(email, password);
 
 		if (!result) {
-			return errorResponse(c, "Invalid credentials", ["Invalid credentials"], 400);
+			return errorResponse(
+				c,
+				"Invalid credentials",
+				["Invalid credentials"],
+				400,
+			);
 		}
 
 		const { user, token, expires, refreshToken, refreshExpires } = result;
 		const deviceInfo = deviceService.getDeviceInfo(c);
 
 		await sessionService.manageUserSessions(user.id);
-		await sessionService.createSession(token, expires, user.id, deviceInfo, refreshToken, refreshExpires);
+		await sessionService.createSession(
+			token,
+			expires,
+			user.id,
+			deviceInfo,
+			refreshToken,
+			refreshExpires,
+		);
 
 		return successResponse(c, "Login successful", {
 			token,
@@ -79,29 +91,56 @@ export const registerHandler: AppRouteHandler<RegisterRoutes> = async (c) => {
 	}
 };
 
-export const refreshTokenHandler: AppRouteHandler<RefreshTokenRoutes> = async (c) => {
+export const refreshTokenHandler: AppRouteHandler<RefreshTokenRoutes> = async (
+	c,
+) => {
 	try {
 		const refreshToken = c.var.refreshToken;
 
 		const result = await authService.loginUserByRefreshToken(refreshToken);
-	
+
 		if (!result) {
-			return errorResponse(c, "Invalid refresh token", ["Invalid refresh token"], 400);
+			return errorResponse(
+				c,
+				"Invalid refresh token",
+				["Invalid refresh token"],
+				400,
+			);
 		}
 
-		const { user, token, expires, refreshToken: newRefreshToken, refreshExpires } = result;
+		const {
+			user,
+			token,
+			expires,
+			refreshToken: newRefreshToken,
+			refreshExpires,
+		} = result;
 		const deviceInfo = deviceService.getDeviceInfo(c);
 
 		await sessionService.manageUserSessions(user.id);
-	
+
 		const session = await sessionService.getSessionById(result.id);
-		
+
 		if (!session) {
-			await sessionService.createSession(token, expires, user.id, deviceInfo, newRefreshToken, refreshExpires);
+			await sessionService.createSession(
+				token,
+				expires,
+				user.id,
+				deviceInfo,
+				newRefreshToken,
+				refreshExpires,
+			);
 		} else {
-			await sessionService.updateSession(token, expires, deviceInfo, newRefreshToken, refreshExpires, session?.id);
+			await sessionService.updateSession(
+				token,
+				expires,
+				deviceInfo,
+				newRefreshToken,
+				refreshExpires,
+				session?.id,
+			);
 		}
-		
+
 		return successResponse(c, "Login successful", {
 			token,
 			refreshToken: newRefreshToken,
@@ -145,7 +184,6 @@ export const logoutHandler: AppRouteHandler<LogoutRoutes> = async (c) => {
 		return catchError(error);
 	}
 };
-
 
 export const getSessionsHandler: AppRouteHandler<GetSessionsRoutes> = async (
 	c,
@@ -275,7 +313,8 @@ export const resendEmailVerificationHandler: AppRouteHandler<
 	try {
 		const { email } = c.req.valid("json");
 
-		const result = await emailVerificationService.resendEmailVerification(email);
+		const result =
+			await emailVerificationService.resendEmailVerification(email);
 
 		if (result.error) {
 			switch (result.error) {
@@ -292,7 +331,9 @@ export const resendEmailVerificationHandler: AppRouteHandler<
 					return errorResponse(
 						c,
 						"You must wait 5 minutes before requesting a new verification email",
-						["You must wait 5 minutes before requesting a new verification email"],
+						[
+							"You must wait 5 minutes before requesting a new verification email",
+						],
 						400,
 					);
 				default:
@@ -354,7 +395,7 @@ export const verifyEmailHandler: AppRouteHandler<VerifyEmailRoutes> = async (
 		}
 
 		return successResponse(c, "Email verified successfully", {
-			user: toUserResponseSchema(result.user!),
+			user: toUserResponseSchema(result.user),
 		});
 	} catch (error) {
 		return catchError(error);

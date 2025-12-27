@@ -1,6 +1,10 @@
 import prisma from "prisma";
-import { generateEmailVerificationToken, verifyToken } from "./token.service";
 import { sendVerificationEmailAsync } from "../../tasks/email/clients/send-email-async";
+import {
+	generateEmailVerificationToken,
+	type TokenPayload,
+	verifyToken,
+} from "./token.service";
 
 export const findUserByEmail = async (email: string) => {
 	return prisma.user.findUnique({
@@ -19,7 +23,11 @@ export const findLatestEmailVerification = async (userId: string) => {
 	});
 };
 
-export const createEmailVerification = async (userId: string, token: string, expiresAt: Date) => {
+export const createEmailVerification = async (
+	userId: string,
+	token: string,
+	expiresAt: Date,
+) => {
 	return prisma.emailVerification.create({
 		data: {
 			userId,
@@ -31,7 +39,7 @@ export const createEmailVerification = async (userId: string, token: string, exp
 
 export const invalidateAllUserEmailVerifications = async (userId: string) => {
 	await prisma.emailVerification.updateMany({
-		where: { 
+		where: {
 			userId,
 			isUsed: false,
 		},
@@ -63,7 +71,7 @@ export const resendEmailVerification = async (email: string) => {
 
 	const newToken = await generateEmailVerificationToken(user);
 	const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 2);
-	
+
 	await createEmailVerification(user.id, newToken, expiresAt);
 	await sendVerificationEmailAsync([user.email], newToken);
 
@@ -87,7 +95,7 @@ export const verifyEmail = async (token: string) => {
 		return { error: "TOKEN_ALREADY_USED" };
 	}
 
-	let verifiedToken;
+	let verifiedToken: TokenPayload;
 	try {
 		verifiedToken = await verifyToken(token);
 	} catch {

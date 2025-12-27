@@ -7,19 +7,24 @@ import { errorResponse } from "../utils/response";
 config();
 
 export type AuthVariables = {
-  Variables: {
-    userId?: string
-    token?: string
-    refreshToken?: string
-  }
-}
+	Variables: {
+		userId?: string;
+		token?: string;
+		refreshToken?: string;
+	};
+};
 
 export function createRouter() {
 	return new OpenAPIHono<AuthVariables>({
 		strict: false,
 		defaultHook: (result, c) => {
 			if (!result.success) {
-				return errorResponse(c, 'The validation error(s)', result.error.issues.map((err) => err.message), 422);
+				return errorResponse(
+					c,
+					"The validation error(s)",
+					result.error.issues.map((err) => err.message),
+					422,
+				);
 			}
 		},
 	});
@@ -30,13 +35,18 @@ export default function createApp() {
 		strict: false,
 		defaultHook: (result, c) => {
 			if (!result.success) {
-				return errorResponse(c, 'The validation error(s)', result.error.issues.map((err) => err.message), 422);
+				return errorResponse(
+					c,
+					"The validation error(s)",
+					result.error.issues.map((err) => err.message),
+					422,
+				);
 			}
 		},
 	});
 
 	app.notFound((c) => {
-		return errorResponse(c, 'Not found', ['Not found'], 404);
+		return errorResponse(c, "Not found", ["Not found"], 404);
 	});
 
 	app.onError((err, c) => {

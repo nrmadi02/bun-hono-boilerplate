@@ -1,7 +1,7 @@
 import { sign, verify } from "hono/jwt";
+import prisma from "prisma";
 import type { User } from "prisma/generated/client";
 import { env } from "../../config/env";
-import prisma from "prisma";
 
 export interface TokenPayload {
 	id: string;
@@ -18,7 +18,6 @@ export interface TokenResult {
 	refreshExpires?: Date;
 }
 
-
 export const createTokenPayload = (user: User, expires: Date): TokenPayload => {
 	return {
 		id: user.id,
@@ -27,7 +26,6 @@ export const createTokenPayload = (user: User, expires: Date): TokenPayload => {
 		expires: expires.toISOString(),
 	};
 };
-
 
 export const generateAccessToken = async (
 	user: User,
@@ -49,10 +47,7 @@ export const generateRefreshToken = async (
 	return { token, expires };
 };
 
-
-export const generateAuthTokens = async (
-	user: User,
-): Promise<TokenResult> => {
+export const generateAuthTokens = async (user: User): Promise<TokenResult> => {
 	const { token, expires } = await generateAccessToken(user);
 	const { token: refreshToken, expires: refreshExpires } =
 		await generateRefreshToken(user);
@@ -65,7 +60,6 @@ export const generateAuthTokens = async (
 	};
 };
 
-
 export const generatePasswordResetToken = async (
 	user: User,
 ): Promise<{ token: string; expires: Date }> => {
@@ -75,7 +69,6 @@ export const generatePasswordResetToken = async (
 
 	return { token, expires };
 };
-
 
 export const generateEmailVerificationToken = async (
 	user: User,
@@ -98,16 +91,16 @@ export const findToken = async (token: string) => {
 	return prisma.session.findUnique({
 		where: { sessionToken: token },
 		include: {
-			user: true
-		}
+			user: true,
+		},
 	});
-}
+};
 
 export const findRefreshToken = async (token: string) => {
 	return prisma.session.findUnique({
 		where: { refreshToken: token },
 		include: {
-			user: true
-		}
+			user: true,
+		},
 	});
-}
+};

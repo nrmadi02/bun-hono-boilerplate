@@ -1,6 +1,5 @@
-
-import { rateLimiter } from "hono-rate-limiter";
 import type { Context } from "hono";
+import { rateLimiter } from "hono-rate-limiter";
 import { connection } from "../lib/queue";
 import { createRedisStore } from "../lib/rate-limit-redis-store";
 
@@ -67,7 +66,9 @@ export const passwordResetLimiter = rateLimiter({
 	message: {
 		success: false,
 		message: "Too many password reset attempts",
-		errors: ["You have exceeded the password reset limit. Please try again in 1 hour."],
+		errors: [
+			"You have exceeded the password reset limit. Please try again in 1 hour.",
+		],
 	},
 });
 
@@ -121,4 +122,3 @@ export const heavyOperationLimiter = rateLimiter({
 		errors: ["Operation rate limit exceeded. Please try again in a minute."],
 	},
 });
-

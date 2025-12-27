@@ -23,4 +23,3 @@ export async function clearRateLimitForPrefix(prefix: string) {
 		await redis.del(...keys);
 	}
 }
-

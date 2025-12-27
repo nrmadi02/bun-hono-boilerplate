@@ -10,7 +10,7 @@ export interface DeviceInfo {
 
 export const getDeviceInfo = (c: Context): DeviceInfo => {
 	const userAgent = c.req.header("user-agent") || "Unknown";
-	
+
 	let ipAddress = "Unknown";
 	try {
 		const connInfo = getConnInfo(c);
@@ -29,4 +29,3 @@ export const getDeviceInfo = (c: Context): DeviceInfo => {
 		userAgent,
 	};
 };
-

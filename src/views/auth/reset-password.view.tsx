@@ -1,4 +1,5 @@
 /** @jsxImportSource hono/jsx */
+/** biome-ignore-all lint/a11y/noSvgWithoutTitle: <> */
 
 import type { FC, PropsWithChildren } from "hono/jsx";
 
@@ -199,7 +200,9 @@ export const ResetPasswordView = ({
 											class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 										>
 											<span id="submitText">Reset Password</span>
-											<span id="submitLoading" class="hidden">Memproses...</span>
+											<span id="submitLoading" class="hidden">
+												Memproses...
+											</span>
 										</button>
 									</form>
 								</div>
@@ -211,6 +214,7 @@ export const ResetPasswordView = ({
 
 			{token && (
 				<script
+					// biome-ignore lint/security/noDangerouslySetInnerHtml: <>
 					dangerouslySetInnerHTML={{
 						__html: `
 					(function() {

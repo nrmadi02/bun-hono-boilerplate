@@ -1,6 +1,15 @@
 import { createRoute } from "@hono/zod-openapi";
 import { errorResponseOpenAPIObjectConfig } from "../../lib/open-api";
 import {
+	validateRefreshToken,
+	validateToken,
+} from "../../middlewares/auth.middleware";
+import { casbinMiddleware } from "../../middlewares/casbin.middleware";
+import {
+	authLimiter,
+	passwordResetLimiter,
+} from "../../middlewares/rate-limit.middleware";
+import {
 	forgotPasswordSchema,
 	loginSchema,
 	registerSchema,
@@ -21,9 +30,6 @@ import {
 	verifyEmailResponseSchema,
 } from "../../schemas/auth/auth-response.schema";
 import { baseResponseSchema } from "../../schemas/base.schema";
-import { validateRefreshToken, validateToken } from "../../middlewares/auth.middleware";
-import { casbinMiddleware } from "../../middlewares/casbin.middleware";
-import { authLimiter, passwordResetLimiter } from "../../middlewares/rate-limit.middleware";
 
 export const loginRoutes = createRoute({
 	path: "/auth/login",
@@ -263,7 +269,7 @@ export const resendEmailVerificationRoutes = createRoute({
 		422: errorResponseOpenAPIObjectConfig("The validation error(s)"),
 		500: errorResponseOpenAPIObjectConfig("Internal server error"),
 	},
-	middleware: [validateToken,authLimiter],
+	middleware: [validateToken, authLimiter],
 });
 
 export const verifyEmailRoutes = createRoute({
@@ -305,5 +311,6 @@ export type GetMeRoutes = typeof getMeRoutes;
 export type ForgotPasswordRoutes = typeof forgotPasswordRoutes;
 export type ResetPasswordRoutes = typeof resetPasswordRoutes;
 export type RefreshTokenRoutes = typeof refreshTokenRoutes;
-export type ResendEmailVerificationRoutes = typeof resendEmailVerificationRoutes;
+export type ResendEmailVerificationRoutes =
+	typeof resendEmailVerificationRoutes;
 export type VerifyEmailRoutes = typeof verifyEmailRoutes;

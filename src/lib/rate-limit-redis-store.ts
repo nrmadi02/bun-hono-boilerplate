@@ -1,8 +1,9 @@
-
 import type { Redis } from "ioredis";
 
 export interface RateLimitStore {
-	increment: (key: string) => Promise<{ totalHits: number; resetTime: Date | undefined }>;
+	increment: (
+		key: string,
+	) => Promise<{ totalHits: number; resetTime: Date | undefined }>;
 	decrement: (key: string) => Promise<void>;
 	resetKey: (key: string) => Promise<void>;
 }
@@ -24,7 +25,9 @@ export class RedisRateLimitStore implements RateLimitStore {
 		this.windowMs = options.windowMs || 60000;
 	}
 
-	async increment(key: string): Promise<{ totalHits: number; resetTime: Date | undefined }> {
+	async increment(
+		key: string,
+	): Promise<{ totalHits: number; resetTime: Date | undefined }> {
 		const redisKey = `${this.prefix}${key}`;
 
 		const pipeline = this.client.pipeline();
@@ -49,7 +52,10 @@ export class RedisRateLimitStore implements RateLimitStore {
 			await this.client.pexpire(redisKey, this.windowMs);
 		}
 
-		const resetTime = ttl > 0 ? new Date(Date.now() + ttl) : new Date(Date.now() + this.windowMs);
+		const resetTime =
+			ttl > 0
+				? new Date(Date.now() + ttl)
+				: new Date(Date.now() + this.windowMs);
 
 		return {
 			totalHits: totalHits as number,
@@ -61,7 +67,7 @@ export class RedisRateLimitStore implements RateLimitStore {
 		const redisKey = `${this.prefix}${key}`;
 		const current = await this.client.get(redisKey);
 
-		if (current && Number.parseInt(current) > 0) {
+		if (current && Number.parseInt(current, 10) > 0) {
 			await this.client.decr(redisKey);
 		}
 	}
@@ -72,7 +78,8 @@ export class RedisRateLimitStore implements RateLimitStore {
 	}
 }
 
-export const createRedisStore = (options: RedisStoreOptions): RedisRateLimitStore => {
+export const createRedisStore = (
+	options: RedisStoreOptions,
+): RedisRateLimitStore => {
 	return new RedisRateLimitStore(options);
 };
-

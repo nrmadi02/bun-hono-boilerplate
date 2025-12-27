@@ -1,21 +1,22 @@
 import { createRoute } from "@hono/zod-openapi";
-import { baseResponseSchema, createErrorSchema } from "../../schemas/base.schema";
+import {
+	baseResponseSchema,
+	createErrorSchema,
+} from "../../schemas/base.schema";
 import {
 	healthDataSchema,
-	readinessDataSchema,
 	livenessDataSchema,
 	metricsDataSchema,
+	readinessDataSchema,
 } from "../../schemas/health/health-response.schema";
-
-
-
 
 export const healthRoute = createRoute({
 	method: "get",
 	path: "/health",
 	tags: ["Health"],
 	summary: "Basic health check",
-	description: "Returns 200 if the server is running. Use for simple uptime monitoring.",
+	description:
+		"Returns 200 if the server is running. Use for simple uptime monitoring.",
 	responses: {
 		200: {
 			description: "Server is healthy",
@@ -33,7 +34,8 @@ export const readinessRoute = createRoute({
 	path: "/health/ready",
 	tags: ["Health"],
 	summary: "Readiness check",
-	description: "Checks if the application is ready to serve traffic. Verifies database, Redis, and queue connections. Returns 503 if not ready.",
+	description:
+		"Checks if the application is ready to serve traffic. Verifies database, Redis, and queue connections. Returns 503 if not ready.",
 	responses: {
 		200: {
 			description: "Application is ready",
@@ -59,7 +61,8 @@ export const livenessRoute = createRoute({
 	path: "/health/live",
 	tags: ["Health"],
 	summary: "Liveness check",
-	description: "Checks if the application is alive and not deadlocked. Monitors event loop latency and memory usage.",
+	description:
+		"Checks if the application is alive and not deadlocked. Monitors event loop latency and memory usage.",
 	responses: {
 		200: {
 			description: "Application is alive",
@@ -85,7 +88,8 @@ export const metricsRoute = createRoute({
 	path: "/health/metrics",
 	tags: ["Health"],
 	summary: "System metrics",
-	description: "Returns detailed system metrics including memory, CPU, database, and Redis statistics.",
+	description:
+		"Returns detailed system metrics including memory, CPU, database, and Redis statistics.",
 	responses: {
 		200: {
 			description: "System metrics",

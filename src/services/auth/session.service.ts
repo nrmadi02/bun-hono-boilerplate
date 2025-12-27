@@ -152,4 +152,3 @@ export const deleteAllUserSessions = async (userId: string): Promise<void> => {
 		where: { userId },
 	});
 };
-

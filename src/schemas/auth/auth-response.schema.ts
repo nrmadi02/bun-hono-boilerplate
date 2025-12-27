@@ -18,7 +18,7 @@ export const sessionSchema = z.object({
 	userAgent: z.string().nullable(),
 	createdAt: z.string(),
 	expireAt: z.string(),
-	isCurrent: z.boolean().optional(), 
+	isCurrent: z.boolean().optional(),
 });
 
 export const sessionsResponseSchema = z.object({

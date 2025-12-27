@@ -1,13 +1,13 @@
 /**
  * Global test setup
  * Runs before all tests
- * 
+ *
  * Note: Environment variables are set in vitest.env.ts (loaded first)
  */
 
-import { beforeAll, afterAll, beforeEach } from "vitest";
+import { afterAll, beforeAll, beforeEach } from "vitest";
 import prisma from "../prisma";
-import { connection as redis, emailQueue } from "../src/lib/queue";
+import { emailQueue, connection as redis } from "../src/lib/queue";
 import "./helpers/mock-email";
 
 // Global test timeout
@@ -39,7 +39,7 @@ afterAll(async () => {
 
 	// Close connections
 	await prisma.$disconnect();
-	
+
 	// Gracefully disconnect Redis
 	try {
 		await redis.quit();
@@ -81,4 +81,3 @@ async function cleanDatabase() {
 		await redis.del(...keys);
 	}
 }
-

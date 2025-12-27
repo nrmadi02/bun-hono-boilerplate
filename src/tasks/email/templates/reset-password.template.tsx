@@ -29,7 +29,8 @@ export const ResetPasswordTemplate = ({
 				<Container className="mx-auto py-5 pb-12 px-5">
 					<Text className="text-[16px] leading-[26px]">Halo,</Text>
 					<Text className="text-[16px] leading-[26px]">
-						Kami menerima permintaan untuk mereset password akun Anda. Klik tombol di bawah ini untuk membuat password baru.
+						Kami menerima permintaan untuk mereset password akun Anda. Klik
+						tombol di bawah ini untuk membuat password baru.
 					</Text>
 					<Section className="text-center">
 						<Button
@@ -40,10 +41,12 @@ export const ResetPasswordTemplate = ({
 						</Button>
 					</Section>
 					<Text className="text-[16px] leading-[26px]">
-						Jika Anda tidak meminta reset password, abaikan email ini. Password Anda tidak akan berubah.
+						Jika Anda tidak meminta reset password, abaikan email ini. Password
+						Anda tidak akan berubah.
 					</Text>
 					<Text className="text-[16px] leading-[26px]">
-						Link ini akan kedaluwarsa dalam waktu tertentu untuk keamanan akun Anda.
+						Link ini akan kedaluwarsa dalam waktu tertentu untuk keamanan akun
+						Anda.
 					</Text>
 					<Text className="text-[16px] leading-[26px]">
 						Salam,
@@ -61,4 +64,3 @@ export const ResetPasswordTemplate = ({
 );
 
 export default ResetPasswordTemplate;
-

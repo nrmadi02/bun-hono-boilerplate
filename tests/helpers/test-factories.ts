@@ -4,9 +4,9 @@
  */
 
 import { faker } from "@faker-js/faker";
-import type { User } from "../../prisma/generated/client";
-import prisma from "../../prisma";
 import Bun from "bun";
+import prisma from "../../prisma";
+import type { User } from "../../prisma/generated/client";
 
 /**
  * Generate mock user data
@@ -117,4 +117,3 @@ export function mockLoginBody(email: string, password: string) {
 		password,
 	};
 }
-

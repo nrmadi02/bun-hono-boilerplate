@@ -3,13 +3,13 @@
  * GET /api/v1/auth/me
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
-import { getTestApp, createAuthHeader } from "../../helpers/test-app";
-import { createTestUser } from "../../helpers/test-factories";
+import { faker } from "@faker-js/faker";
+import { beforeEach, describe, expect, it } from "vitest";
+import prisma from "../../../prisma";
 import { generateAccessToken } from "../../../src/services/auth/token.service";
 import { clearRateLimits } from "../../helpers/clear-rate-limit";
-import { faker } from "@faker-js/faker";
-import prisma from "../../../prisma";
+import { createAuthHeader, getTestApp } from "../../helpers/test-app";
+import { createTestUser } from "../../helpers/test-factories";
 
 const app = getTestApp();
 
@@ -20,7 +20,7 @@ describe("GET /api/v1/auth/me", () => {
 	beforeEach(async () => {
 		// Clear rate limits before each test
 		await clearRateLimits();
-		
+
 		// Create test user with random email
 		testUser = await createTestUser({
 			email: faker.internet.email(),
@@ -28,9 +28,11 @@ describe("GET /api/v1/auth/me", () => {
 		});
 
 		// Generate token for user
-		const { token: accessToken, expires } = await generateAccessToken(testUser.user);
+		const { token: accessToken, expires } = await generateAccessToken(
+			testUser.user,
+		);
 		token = accessToken;
-		
+
 		// Create session in database (required by auth middleware)
 		await prisma.session.create({
 			data: {
@@ -115,8 +117,10 @@ describe("GET /api/v1/auth/me", () => {
 			emailVerified: true,
 		});
 
-		const { token: adminToken, expires } = await generateAccessToken(adminUser.user);
-		
+		const { token: adminToken, expires } = await generateAccessToken(
+			adminUser.user,
+		);
+
 		// Create session for admin token
 		await prisma.session.create({
 			data: {
@@ -138,4 +142,3 @@ describe("GET /api/v1/auth/me", () => {
 		expect(data.data.user.role).toBe("admin");
 	});
 });
-

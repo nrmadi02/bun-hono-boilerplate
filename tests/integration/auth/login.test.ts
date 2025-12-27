@@ -3,11 +3,11 @@
  * POST /api/v1/auth/login
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { faker } from "@faker-js/faker";
+import { beforeEach, describe, expect, it } from "vitest";
+import { clearRateLimits } from "../../helpers/clear-rate-limit";
 import { getTestApp } from "../../helpers/test-app";
 import { createTestUser, mockLoginBody } from "../../helpers/test-factories";
-import { clearRateLimits } from "../../helpers/clear-rate-limit";
-import { faker } from "@faker-js/faker";
 
 const app = getTestApp();
 
@@ -17,7 +17,7 @@ describe("POST /api/v1/auth/login", () => {
 	beforeEach(async () => {
 		// Clear rate limits before each test
 		await clearRateLimits();
-		
+
 		// Create test user before each test with random email
 		testUser = await createTestUser({
 			email: faker.internet.email(),
@@ -97,7 +97,10 @@ describe("POST /api/v1/auth/login", () => {
 			emailVerified: false,
 		});
 
-		const loginData = mockLoginBody(unverifiedUser.user.email, unverifiedUser.password);
+		const loginData = mockLoginBody(
+			unverifiedUser.user.email,
+			unverifiedUser.password,
+		);
 
 		const response = await app.request("/api/v1/auth/login", {
 			method: "POST",
@@ -176,4 +179,3 @@ describe("POST /api/v1/auth/login", () => {
 		expect(data.data.user.username).toBe(testUser.user.username);
 	});
 });
-

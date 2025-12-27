@@ -1,7 +1,11 @@
 import prisma from "prisma";
-import { generatePasswordResetToken, verifyToken } from "./token.service";
-import { deleteAllUserSessions } from "./session.service";
 import { hashPassword } from "./auth.service";
+import { deleteAllUserSessions } from "./session.service";
+import {
+	generatePasswordResetToken,
+	type TokenPayload,
+	verifyToken,
+} from "./token.service";
 
 export const findPasswordResetByToken = async (token: string) => {
 	return prisma.passwordReset.findUnique({
@@ -88,7 +92,7 @@ export const resetPassword = async (token: string, newPassword: string) => {
 		return { error: "TOKEN_ALREADY_USED" };
 	}
 
-	let verifiedToken;
+	let verifiedToken: TokenPayload;
 	try {
 		verifiedToken = await verifyToken(token);
 	} catch {
@@ -125,4 +129,3 @@ export const resetPassword = async (token: string, newPassword: string) => {
 
 	return { success: true };
 };
-

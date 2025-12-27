@@ -18,10 +18,13 @@ const Layout: FC<PropsWithChildren> = (props) => {
 
 interface VerifyEmailViewProps {
 	success?: boolean;
-	message?: string;	
+	message?: string;
 }
 
-export const VerifyEmailView = ({ success, message }: VerifyEmailViewProps = {}) => {
+export const VerifyEmailView = ({
+	success,
+	message,
+}: VerifyEmailViewProps = {}) => {
 	const isSuccess = success === true;
 	const displayMessage =
 		message ||
@@ -37,12 +40,11 @@ export const VerifyEmailView = ({ success, message }: VerifyEmailViewProps = {})
 					<div class="flex justify-center mb-6">
 						<div
 							class={`w-20 h-20 rounded-full flex items-center justify-center ${
-								isSuccess
-									? "bg-green-50"
-									: "bg-red-50"
+								isSuccess ? "bg-green-50" : "bg-red-50"
 							}`}
 						>
 							{isSuccess ? (
+								// biome-ignore lint/a11y/noSvgWithoutTitle: <>
 								<svg
 									class="w-10 h-10 text-green-600"
 									fill="none"
@@ -58,6 +60,7 @@ export const VerifyEmailView = ({ success, message }: VerifyEmailViewProps = {})
 									/>
 								</svg>
 							) : (
+								// biome-ignore lint/a11y/noSvgWithoutTitle: <>
 								<svg
 									class="w-10 h-10 text-red-600"
 									fill="none"
@@ -83,7 +86,6 @@ export const VerifyEmailView = ({ success, message }: VerifyEmailViewProps = {})
 					<p class="text-gray-600 text-center mb-8 leading-relaxed">
 						{displayMessage}
 					</p>
-
 				</div>
 			</div>
 		</Layout>

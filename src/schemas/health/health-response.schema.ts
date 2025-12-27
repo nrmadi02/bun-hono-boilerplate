@@ -76,4 +76,3 @@ export const metricsDataSchema = z.object({
 		env: z.string(),
 	}),
 });
-

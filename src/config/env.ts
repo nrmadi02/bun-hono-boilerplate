@@ -17,7 +17,11 @@ const envSchema = z.object({
 	REDIS_PORT: z.string().min(1, "REDIS_PORT is required"),
 	RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
 	BASE_URL: z.string().min(1, "BASE_URL is required"),
-	USE_REDIS_CACHE: z.string().optional().default("false").transform((val) => val === "true"),
+	USE_REDIS_CACHE: z
+		.string()
+		.optional()
+		.default("false")
+		.transform((val) => val === "true"),
 });
 
 let env: z.infer<typeof envSchema>;
@@ -26,11 +30,14 @@ const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
 	// If in test mode and parsing failed, provide defaults
 	if (process.env.NODE_ENV === "test") {
-		console.warn("⚠️  Test environment variables not fully configured, using defaults");
+		console.warn(
+			"⚠️  Test environment variables not fully configured, using defaults",
+		);
 		env = {
 			NODE_ENV: "test" as const,
 			PORT: 5001,
-			DATABASE_URL: "postgresql://postgres:ulalaa2202@localhost:5432/hono_bun_test?connection_limit=20&pool_timeout=20",
+			DATABASE_URL:
+				"postgresql://postgres:ulalaa2202@localhost:5432/hono_bun_test?connection_limit=20&pool_timeout=20",
 			JWT_SECRET: "ahsbxzncewrjasdbyjwheb",
 			REDIS_HOST: "localhost",
 			REDIS_PORT: "6379",
@@ -38,7 +45,7 @@ if (!parsed.success) {
 			BASE_URL: "http://localhost:5001",
 			USE_REDIS_CACHE: false,
 		};
-		
+
 		// Set env vars for other modules
 		process.env.DATABASE_URL = env.DATABASE_URL;
 		process.env.JWT_SECRET = env.JWT_SECRET;

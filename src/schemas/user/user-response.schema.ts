@@ -12,6 +12,6 @@ export const userResponseSchema = z.object({
 	updatedAt: z.date(),
 });
 
-export const toUserResponseSchema = (user: User) => {
+export const toUserResponseSchema = (user?: User) => {
 	return userResponseSchema.parse(user);
 };

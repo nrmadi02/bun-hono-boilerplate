@@ -9,4 +9,3 @@ const router = createRouter()
 	.openapi(routes.metricsRoute, handlers.metricsHandler);
 
 export default router;
-

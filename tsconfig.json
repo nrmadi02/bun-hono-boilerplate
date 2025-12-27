@@ -12,7 +12,7 @@
 			"../*": ["./src/*"]
 		},
 		"outDir": "./dist",
-		"types": ["bun", "bun-types"],
+		"types": ["bun", "bun-types"]
 	},
-	"exclude": ["./node_modules"],
+	"exclude": ["./node_modules"]
 }

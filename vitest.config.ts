@@ -1,5 +1,5 @@
-import { defineConfig } from "vitest/config";
 import path from "node:path";
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
 	test: {
@@ -10,7 +10,8 @@ export default defineConfig({
 			PORT: "5001",
 			BASE_URL: "http://localhost:5001",
 			JWT_SECRET: "ahsbxzncewrjasdbyjwheb",
-			DATABASE_URL: "postgresql://postgres:ulalaa2202@localhost:5432/hono_bun_test?connection_limit=20&pool_timeout=20",
+			DATABASE_URL:
+				"postgresql://postgres:ulalaa2202@localhost:5432/hono_bun_test?connection_limit=20&pool_timeout=20",
 			REDIS_HOST: "localhost",
 			REDIS_PORT: "6379",
 			RESEND_API_KEY: "re_VHH3LHTM_JEhT18wFmkxgkPehUDHPfZHi",
@@ -47,4 +48,3 @@ export default defineConfig({
 		},
 	},
 });
-
